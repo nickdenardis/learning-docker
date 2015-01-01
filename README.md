@@ -72,6 +72,10 @@ View all configuration information for a container
 
     docker inspect <container id>
 
+Get the IP address of a container
+
+    docker inspect -f "{{.NetworkSettings.IPAddress}}" <container id>
+
 Removing a container
 
     docker rm <container id>
@@ -114,3 +118,42 @@ Run and name an image from a Dockerfile in the directory
 Forward in a port from outside in and map a shared directory
 
     docker run -v /home/core/share:/var/www:rw -p 80:80 -d nginx-example
+
+Setup for multiple sites on a host
+---------------
+
+Run the nginx reverse proxy container to field all the requests
+
+    docker run -d -p 80:80 -v /var/run/docker.sock:/tmp/docker.sock jwilder/nginx-proxy
+
+Setup the site folders
+
+    mkdir /usr/local/sites/domain/ \
+    /usr/local/sites/domain/logs \
+    /usr/local/sites/domain/public/
+
+    echo "Hello world!" > /usr/local/sites/domain/public/index.php
+
+Setup the 'data only' container
+
+    docker run \
+    --name domain-data \
+    -v /usr/local/sites/domain:/data:rw \
+    dylanlindgren/docker-laravel-data
+
+Setup the 'php' container
+
+    docker run \
+    --privileged=true \
+    --name domain-php \
+    --volumes-from domain-data \
+    -d dylanlindgren/docker-laravel-phpfpm
+
+Setup the 'nginx' container with the ENV var for the host
+
+    docker run \
+    --privileged=true \
+    --volumes-from domain-data \
+    -e "VIRTUAL_HOST=domain.com" \
+    --link domain-php:fpm \
+    -d dylanlindgren/docker-laravel-nginx
