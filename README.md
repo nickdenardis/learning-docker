@@ -72,6 +72,22 @@ View all configuration information for a container
 
     docker inspect <container id>
 
+Removing a container
+
+    docker rm <container id>
+
+Remove all containers
+
+    docker rm $(docker ps -a -q)
+
+Removing an image
+
+    docker rmi <container id>
+
+Removing all images
+
+    docker rmi $(docker ps -a -q)
+
 Using a Dockerfile to build and start
 ---------------
 
